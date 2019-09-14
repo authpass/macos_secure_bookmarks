@@ -13,6 +13,14 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  macos_secure_bookmarks:
+    path: ../
+  file_chooser:
+    git:
+      url: https://github.com/hpoul/flutter-desktop-embedding.git
+      path: plugins/file_chooser
+      ref: e457b81331e3132b7cd729d4b7df96efb51f306f
+    
 
   cupertino_icons: ^0.1.0
 
