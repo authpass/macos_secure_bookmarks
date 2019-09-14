@@ -9,8 +9,8 @@
 !.idea/dictionaries
 !.idea/dictionaries/*
 !.idea/inspectionProfiles/*
-!.idea/codeStyles
-!.idea/codeStyles/*
+#!.idea/codeStyles
+#!.idea/codeStyles/*
 *.iml
 
 # Java/Kotlin/Android
