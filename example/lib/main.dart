@@ -17,7 +17,6 @@ import 'dart:io';
 import 'package:file_chooser/file_chooser.dart';
 import 'package:flutter/foundation.dart' show debugDefaultTargetPlatformOverride;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:logging/logging.dart';
 import 'package:logging_appenders/logging_appenders.dart';
 import 'package:macos_secure_bookmarks/macos_secure_bookmarks.dart';
@@ -68,6 +67,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  static final SecureBookmarks _secureBookmarks = SecureBookmarks();
   String _file = null;
 
   String _bookmark;
@@ -103,7 +103,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 RaisedButton(
                   child: Text('Bookmark'),
                   onPressed: () async {
-                    final bookmark = await SecureBookmarks.bookmark(File(_file));
+                    final bookmark = await _secureBookmarks.bookmark(File(_file));
                     setState(() {
                       _bookmark = bookmark;
                     });
@@ -113,7 +113,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 RaisedButton(
                   child: Text('Resolve Bookmark'),
                   onPressed: () async {
-                    final resolved = await SecureBookmarks.resolveBookmark(_bookmark);
+                    final resolved = await _secureBookmarks.resolveBookmark(_bookmark);
                     _logger.info('Resolved to $resolved');
                   },
                 ),
