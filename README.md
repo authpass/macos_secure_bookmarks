@@ -8,7 +8,6 @@ Flutter plugin to create secure bookmarks to keep access to files in sandboxed a
 * Check the [documentation on security-scoped bookmarks](https://developer.apple.com/library/archive/documentation/Security/Conceptual/AppSandboxDesignGuide/AppSandboxInDepth/AppSandboxInDepth.html#//apple_ref/doc/uid/TP40011183-CH3-SW16)
 * Make sure to [enable the necessary entitlements](https://developer.apple.com/library/archive/documentation/Miscellaneous/Reference/EntitlementKeyReference/Chapters/EnablingAppSandbox.html#//apple_ref/doc/uid/TP40011195-CH4-SW18)
     * com.apple.security.files.bookmarks.app-scope
-    * 
 
 ### Creating Security Scoped Bookmarks
 
@@ -40,7 +39,6 @@ await startAccessingSecurityScopedResource(resolvedFile);
 
 // and later give up access.
 await stopAccessingSecurityScopedResource(resolvedFile);
-
 
 ```
 

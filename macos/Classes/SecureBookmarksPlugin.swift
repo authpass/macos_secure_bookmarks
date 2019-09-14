@@ -22,6 +22,11 @@ public class SecureBookmarksPlugin: NSObject, FlutterPlugin {
     let instance = SecureBookmarksPlugin()
     registrar.addMethodCallDelegate(instance, channel: channel)
   }
+  
+  /// We store all resolved Urls by their absolute path,
+  /// because `startAccessingSecurityScopedResource` requires
+  /// the same URL instance, not just an arbitrary file URL.
+  private var resolvedUrls: [String: URL] = [:];
 
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     guard let args = call.arguments as? Dictionary<String, Any> else {
@@ -58,6 +63,7 @@ public class SecureBookmarksPlugin: NSObject, FlutterPlugin {
         }
         print("resolved bookmark to: \(url) (\(isStale))")
         if (url.isFileURL) {
+          resolvedUrls[url.path] = url
           result(url.path)
         } else {
           result(FlutterError(code: "InvalidBookmark", message: "Bookmark is no file url. \(url)", details: nil))
@@ -67,19 +73,22 @@ public class SecureBookmarksPlugin: NSObject, FlutterPlugin {
         result(FlutterError(code: "UnexpectedError", message: "Error while resolving bookmark", details: nil))
       }
     case "startAccessingSecurityScopedResource":
-      guard let file = args["file"] as? String else {
-        result(FlutterError(code: "InvalidArguments", message: "expected file argument to be string.", details: nil))
-        return
+      guard let file = args["file"] as? String,
+        let url = resolvedUrls[file] else {
+          result(FlutterError(code: "InvalidArguments", message: "expected file argument to be string.", details: nil))
+          return
       }
-      let url = URL(fileURLWithPath: file)
+//      let url = URL(fileURLWithPath: file)
       result(url.startAccessingSecurityScopedResource())
     case "stopAccessingSecurityScopedResource":
-      guard let file = args["file"] as? String else {
-        result(FlutterError(code: "InvalidArguments", message: "expected file argument to be string.", details: nil))
-        return
+      guard let file = args["file"] as? String,
+        let url = resolvedUrls[file] else {
+          result(FlutterError(code: "InvalidArguments", message: "expected file argument to be string.", details: nil))
+          return
       }
-      let url = URL(fileURLWithPath: file)
+//      let url = URL(fileURLWithPath: file)
       url.stopAccessingSecurityScopedResource()
+      result(true)
     default:
       result(FlutterMethodNotImplemented)
     }
