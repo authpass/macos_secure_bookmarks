@@ -1,5 +1,7 @@
 # macos_secure_bookmarks
 
+[![Pub](https://img.shields.io/pub/v/macos_secure_bookmarks?color=green)](https://pub.dev/packages/macos_secure_bookmarks)
+
 Flutter plugin to create secure bookmarks to keep access to files in sandboxed apps.
 
 
