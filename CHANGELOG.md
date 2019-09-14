@@ -1,3 +1,7 @@
+# 0.1.0+1
+
+* Added noop modules for ios/android so the builds run.
+
 # 0.1.0 - 2019-09-14
 
 * Improved readme, documentation.
