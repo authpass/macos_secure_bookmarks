@@ -47,7 +47,7 @@ public class SecureBookmarksPlugin: NSObject, FlutterPlugin {
         let data = try url.bookmarkData(options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil)
         result(data.base64EncodedString())
       } catch {
-        result(FlutterError(code: "UnexpectedError", message: "Error while creating bookmark \(error)", details: error))
+        result(FlutterError(code: "UnexpectedError", message: "Error while creating bookmark \(error) for \(url)", details: nil))
       }
     case "URLByResolvingBookmarkData":
       guard let bookmark64 = args["bookmark"] as? String,

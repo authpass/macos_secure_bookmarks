@@ -1,3 +1,8 @@
+# 0.1.0+2
+
+* Improved error handling: Don't try to pass exception back to dart.
+  (resulted in crashes)
+
 # 0.1.0+1
 
 * Added noop modules for ios/android so the builds run.
