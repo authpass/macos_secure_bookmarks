@@ -88,7 +88,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: Text('Select File'),
                   onPressed: () async {
                     showOpenPanel(
-                      (result, files) {
+                          (result, files) {
                         if (result != FileChooserResult.ok || files.isEmpty) {
                           return;
                         }

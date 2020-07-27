@@ -57,7 +57,7 @@ public class SecureBookmarksPlugin: NSObject, FlutterPlugin {
       }
       do {
         var isStale: Bool = false
-        guard let url = try URL(resolvingBookmarkData: bookmark, options: .withSecurityScope, bookmarkDataIsStale: &isStale) else {
+        guard let url = try? URL(resolvingBookmarkData: bookmark, options: .withSecurityScope, bookmarkDataIsStale: &isStale) else {
           result(FlutterError(code: "UnexpectedError", message: "Error while resolving bookmark", details: nil))
           return
         }
