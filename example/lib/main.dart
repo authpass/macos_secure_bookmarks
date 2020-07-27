@@ -15,7 +15,8 @@
 import 'dart:io';
 
 import 'package:file_chooser/file_chooser.dart';
-import 'package:flutter/foundation.dart' show debugDefaultTargetPlatformOverride;
+import 'package:flutter/foundation.dart'
+    show debugDefaultTargetPlatformOverride;
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:logging_appenders/logging_appenders.dart';
@@ -35,7 +36,9 @@ void main() {
 
   FlutterError.onError = (errorDetails) {
     _logger.shout(
-        'Unhandled Flutter framework (${errorDetails.library}) error.', errorDetails.exception, errorDetails.stack);
+        'Unhandled Flutter framework (${errorDetails.library}) error.',
+        errorDetails.exception,
+        errorDetails.stack);
     _logger.fine(errorDetails.summary.toString());
   };
 
@@ -68,7 +71,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   static final SecureBookmarks _secureBookmarks = SecureBookmarks();
-  String _file = null;
+  String _file;
 
   String _bookmark;
 
@@ -87,23 +90,23 @@ class _MyHomePageState extends State<MyHomePage> {
                 RaisedButton(
                   child: Text('Select File'),
                   onPressed: () async {
-                    showOpenPanel(
-                      (result, files) {
-                        if (result != FileChooserResult.ok || files.isEmpty) {
-                          return;
-                        }
-                        setState(() {
-                          _file = files.first;
-                        });
-                        _logger.info('Selected file: $_file');
-                      },
-                    );
+                    _logger.fine('showOpenPanel..');
+                    final result = await showOpenPanel();
+                    _logger.fine('got result: $result');
+                    if (result.canceled || result.paths.isEmpty) {
+                      return;
+                    }
+                    setState(() {
+                      _file = result.paths.first;
+                    });
+                    _logger.info('Selected file: $_file');
                   },
                 ),
                 RaisedButton(
                   child: Text('Bookmark'),
                   onPressed: () async {
-                    final bookmark = await _secureBookmarks.bookmark(File(_file));
+                    final bookmark =
+                        await _secureBookmarks.bookmark(File(_file));
                     setState(() {
                       _bookmark = bookmark;
                     });
@@ -113,7 +116,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 RaisedButton(
                   child: Text('Resolve Bookmark'),
                   onPressed: () async {
-                    final resolved = await _secureBookmarks.resolveBookmark(_bookmark);
+                    final resolved =
+                        await _secureBookmarks.resolveBookmark(_bookmark);
                     _logger.info('Resolved to $resolved');
                   },
                 ),
@@ -126,8 +130,11 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: SingleChildScrollView(
                   child: Container(
                     padding: const EdgeInsets.all(16),
-                    child: Text(
-                      logMessages.log.toString(),
+                    child: AnimatedBuilder(
+                      animation: logMessages.log,
+                      builder: (context, _) => Text(
+                        logMessages.log.toString(),
+                      ),
                     ),
                   ),
                   reverse: true,
@@ -144,14 +151,16 @@ class _MyHomePageState extends State<MyHomePage> {
 class ShortFormatter extends LogRecordFormatter {
   @override
   StringBuffer formatToStringBuffer(LogRecord rec, StringBuffer sb) {
-    sb.write('${rec.time.hour}:${rec.time.minute}:${rec.time.second} ${rec.level.name} '
+    sb.write(
+        '${rec.time.hour}:${rec.time.minute}:${rec.time.second} ${rec.level.name} '
         '${rec.message}');
 
     if (rec.error != null) {
       sb.write(rec.error);
     }
     // ignore: avoid_as
-    final stackTrace = rec.stackTrace ?? (rec.error is Error ? (rec.error as Error).stackTrace : null);
+    final stackTrace = rec.stackTrace ??
+        (rec.error is Error ? (rec.error as Error).stackTrace : null);
     if (stackTrace != null) {
       sb.write(stackTrace);
     }
@@ -159,7 +168,7 @@ class ShortFormatter extends LogRecordFormatter {
   }
 }
 
-class StringBufferWrapper with ChangeNotifier {
+class StringBufferWrapper with ChangeNotifier implements ValueNotifier<String> {
   final StringBuffer _buffer = StringBuffer();
 
   void writeln(String line) {
@@ -169,6 +178,14 @@ class StringBufferWrapper with ChangeNotifier {
 
   @override
   String toString() => _buffer.toString();
+
+  @override
+  String get value => _buffer.toString();
+
+  @override
+  set value(String newValue) => _buffer
+    ..clear()
+    ..write(newValue);
 }
 
 class MemoryAppender extends BaseLogAppender {

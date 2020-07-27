@@ -57,10 +57,7 @@ public class SecureBookmarksPlugin: NSObject, FlutterPlugin {
       }
       do {
         var isStale: Bool = false
-        guard let url = try URL(resolvingBookmarkData: bookmark, options: .withSecurityScope, bookmarkDataIsStale: &isStale) else {
-          result(FlutterError(code: "UnexpectedError", message: "Error while resolving bookmark", details: nil))
-          return
-        }
+        let url = try URL(resolvingBookmarkData: bookmark, options: .withSecurityScope, bookmarkDataIsStale: &isStale)
         print("resolved bookmark to: \(url) (\(isStale))")
         if (url.isFileURL) {
           resolvedUrls[url.path] = url
@@ -70,7 +67,7 @@ public class SecureBookmarksPlugin: NSObject, FlutterPlugin {
           return
         }
       } catch {
-        result(FlutterError(code: "UnexpectedError", message: "Error while resolving bookmark", details: nil))
+        result(FlutterError(code: "UnexpectedError", message: "Error while resolving bookmark \(error)", details: nil))
       }
     case "startAccessingSecurityScopedResource":
       guard let file = args["file"] as? String,

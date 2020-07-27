@@ -25,8 +25,11 @@
 
 #### project specific ignores below
 
+.DS_Store
+.dart_tool/
 
 .packages
+.pub/
 .flutter-plugins
 pubspec.lock
 

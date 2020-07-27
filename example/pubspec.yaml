@@ -1,14 +1,10 @@
-name: example_flutter
+name: macos_secure_bookmarks_example
 description: An example project for flutter-desktop-embedding.
 
 version: 0.1.0
 
 environment:
-  sdk: '>=2.0.0 <3.0.0'
-  # The example interacts with build scripts on the Flutter side that are not
-  # yet stable, so it requires a very recent version of Flutter.
-  # This version will increase regularly as the build scripts change.
-  flutter: '>=1.9.8-pre.31'
+  sdk: '>=2.7.0 <3.0.0'
 
 dependencies:
   flutter:
@@ -17,9 +13,9 @@ dependencies:
     path: ../
   file_chooser:
     git:
-      url: https://github.com/hpoul/flutter-desktop-embedding.git
+      url: https://github.com/google/flutter-desktop-embedding.git
       path: plugins/file_chooser
-      ref: e457b81331e3132b7cd729d4b7df96efb51f306f
+      ref: 9e9b68b67c2a2c0b82eed2224f709aff2ccbab7c
     
 
   cupertino_icons: ^0.1.0
@@ -31,19 +27,3 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-  # See https://github.com/flutter/flutter/wiki/Desktop-shells#fonts
-  fonts:
-    - family: Roboto
-      fonts:
-        - asset: fonts/Roboto/Roboto-Thin.ttf
-          weight: 100
-        - asset: fonts/Roboto/Roboto-Light.ttf
-          weight: 300
-        - asset: fonts/Roboto/Roboto-Regular.ttf
-          weight: 400
-        - asset: fonts/Roboto/Roboto-Medium.ttf
-          weight: 500
-        - asset: fonts/Roboto/Roboto-Bold.ttf
-          weight: 700
-        - asset: fonts/Roboto/Roboto-Black.ttf
-          weight: 900
