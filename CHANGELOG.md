@@ -1,3 +1,7 @@
+# 0.1.1
+
+* Fix compile errors for Swift 5.1, thanks @copypasteearth #1
+
 # 0.1.0+2
 
 * Improved error handling: Don't try to pass exception back to dart.
