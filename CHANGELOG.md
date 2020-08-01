@@ -1,3 +1,7 @@
+# 0.1.2
+
+* Remove android/ plugin folder. This is no longer required since flutter 1.16.3
+
 # 0.1.1
 
 * Fix compile errors for Swift 5.1, thanks @copypasteearth #1
