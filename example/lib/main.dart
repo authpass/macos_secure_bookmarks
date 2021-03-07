@@ -14,7 +14,7 @@
 
 import 'dart:io';
 
-import 'package:file_chooser/file_chooser.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart'
     show debugDefaultTargetPlatformOverride;
 import 'package:flutter/material.dart';
@@ -87,22 +87,22 @@ class _MyHomePageState extends State<MyHomePage> {
           children: <Widget>[
             Row(
               children: <Widget>[
-                RaisedButton(
+                ElevatedButton(
                   child: Text('Select File'),
                   onPressed: () async {
                     _logger.fine('showOpenPanel..');
-                    final result = await showOpenPanel();
+                    final result = await openFile();
                     _logger.fine('got result: $result');
-                    if (result.canceled || result.paths.isEmpty) {
+                    if (result == null || result.path.isEmpty) {
                       return;
                     }
                     setState(() {
-                      _file = result.paths.first;
+                      _file = result.path;
                     });
                     _logger.info('Selected file: $_file');
                   },
                 ),
-                RaisedButton(
+                ElevatedButton(
                   child: Text('Bookmark'),
                   onPressed: () async {
                     final bookmark =
@@ -113,7 +113,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     _logger.info('Got bookmark: $bookmark');
                   },
                 ),
-                RaisedButton(
+                ElevatedButton(
                   child: Text('Resolve Bookmark'),
                   onPressed: () async {
                     final resolved =

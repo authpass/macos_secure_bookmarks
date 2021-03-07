@@ -11,14 +11,8 @@ dependencies:
     sdk: flutter
   macos_secure_bookmarks:
     path: ../
-  file_chooser:
-    git:
-      url: https://github.com/google/flutter-desktop-embedding.git
-      path: plugins/file_chooser
-      ref: 9e9b68b67c2a2c0b82eed2224f709aff2ccbab7c
-    
-
-  cupertino_icons: ^0.1.0
+  file_selector: ^0.8.2
+  file_selector_macos: ^0.0.4
 
 dev_dependencies:
   flutter_test:

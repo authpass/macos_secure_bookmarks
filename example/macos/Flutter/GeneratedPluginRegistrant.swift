@@ -5,10 +5,10 @@
 import FlutterMacOS
 import Foundation
 
-import file_chooser
+import file_selector_macos
 import macos_secure_bookmarks
 
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
-  FileChooserPlugin.register(with: registry.registrar(forPlugin: "FileChooserPlugin"))
+  FileSelectorPlugin.register(with: registry.registrar(forPlugin: "FileSelectorPlugin"))
   SecureBookmarksPlugin.register(with: registry.registrar(forPlugin: "SecureBookmarksPlugin"))
 }
