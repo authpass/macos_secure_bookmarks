@@ -1,10 +1,10 @@
 name: macos_secure_bookmarks_example
 description: An example project for flutter-desktop-embedding.
 
-version: 0.1.0
+version: 0.2.0
 
 environment:
-  sdk: '>=2.7.0 <3.0.0'
+  sdk: '>=2.12.0-0 <3.0.0'
 
 dependencies:
   flutter:
@@ -16,7 +16,7 @@ dependencies:
       url: https://github.com/google/flutter-desktop-embedding.git
       path: plugins/file_chooser
       ref: 9e9b68b67c2a2c0b82eed2224f709aff2ccbab7c
-    
+
 
   cupertino_icons: ^0.1.0
 
@@ -26,4 +26,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-

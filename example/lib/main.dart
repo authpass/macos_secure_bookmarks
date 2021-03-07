@@ -61,7 +61,7 @@ class ExampleApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+  MyHomePage({Key? key, required this.title}) : super(key: key);
 
   final String title;
 
@@ -71,9 +71,9 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   static final SecureBookmarks _secureBookmarks = SecureBookmarks();
-  String _file;
+  late String _file;
 
-  String _bookmark;
+  late String _bookmark;
 
   @override
   Widget build(BuildContext context) {
