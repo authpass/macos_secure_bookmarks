@@ -1,3 +1,7 @@
+# 0.1.2+1
+
+* Upgrade dependencies.
+
 # 0.1.2
 
 * Remove android/ plugin folder. This is no longer required since flutter 1.16.3
