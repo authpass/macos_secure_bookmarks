@@ -23,7 +23,7 @@ showOpenPanel((result, files) {
   
   // Now create a security scoped bookmark
   final secureBookmarks = SecureBookmarks();
-  final bookmark = await _secureBookmarks.bookmark(File(_file));
+  final bookmark = await secureBookmarks.bookmark(File(_file));
   
   // Now store the bookmark somewhere for later invocations
 });
