@@ -1,6 +1,6 @@
 name: macos_secure_bookmarks
 description: Flutter desktop plugin for managing secure bookmarks to access files in sandbox.
-version: 0.2.0
+version: 0.2.1
 homepage: https://github.com/authpass/macos_secure_bookmarks
 
 flutter:
