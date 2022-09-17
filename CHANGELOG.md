@@ -1,3 +1,7 @@
+# 0.2.1
+
+* change method signature without breaking the API.
+
 # 0.2.0
 
 * null safety migration
