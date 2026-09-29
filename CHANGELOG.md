@@ -1,3 +1,15 @@
+# 0.3.0
+
+* Add stale-aware `resolve` with per-id security scope lifetime, returning the
+  path, stale flag, rewritten bookmark bytes, and volume display name.
+* Add `release` to leave a resolve scope (releasing an unheld id is a no-op).
+* Add `mint`, returning bookmark bytes plus the volume display name.
+* Report detached volumes, deleted targets, and corrupt bytes as one typed
+  `UnresolvableBookmark` error carrying the native domain and code.
+* Modernize: Dart 3, current Flutter stable, Swift Package Manager support
+  alongside CocoaPods, lint-clean, refreshed example app.
+* Existing API unchanged and backward compatible.
+
 # 0.2.1
 
 * change method signature without breaking the API.

@@ -1,79 +1,111 @@
-// Copyright 2018 Google LLC
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:file_selector/file_selector.dart';
-import 'package:flutter/foundation.dart'
-    show debugDefaultTargetPlatformOverride;
 import 'package:flutter/material.dart';
-import 'package:logging/logging.dart';
-import 'package:logging_appenders/logging_appenders.dart';
 import 'package:macos_secure_bookmarks/macos_secure_bookmarks.dart';
 
-final MemoryAppender logMessages = MemoryAppender();
-final _logger = Logger('main');
-
 void main() {
-  Logger.root.level = Level.ALL;
-  PrintAppender().attachToLogger(Logger.root);
-  logMessages.attachToLogger(Logger.root);
-  _logger.fine('Application launched.');
-
-  // See https://github.com/flutter/flutter/wiki/Desktop-shells#target-platform-override
-  debugDefaultTargetPlatformOverride = TargetPlatform.fuchsia;
-
-  FlutterError.onError = (errorDetails) {
-    _logger.shout(
-        'Unhandled Flutter framework (${errorDetails.library}) error.',
-        errorDetails.exception,
-        errorDetails.stack);
-    _logger.fine(errorDetails.summary.toString());
-  };
-
-  runApp(ExampleApp());
+  runApp(const ExampleApp());
 }
 
 class ExampleApp extends StatelessWidget {
+  const ExampleApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Secure Bookmarks Demo',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
-        // See https://github.com/flutter/flutter/wiki/Desktop-shells#fonts
-        fontFamily: 'Roboto',
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Pageasdf'),
+      home: const BookmarkDemoPage(title: 'Secure Bookmarks Demo'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+class BookmarkDemoPage extends StatefulWidget {
+  const BookmarkDemoPage({super.key, required this.title});
 
   final String title;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  State<BookmarkDemoPage> createState() => _BookmarkDemoPageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _BookmarkDemoPageState extends State<BookmarkDemoPage> {
   static final SecureBookmarks _secureBookmarks = SecureBookmarks();
-  String _file;
+  static const String _resolveId = 'demo-pick';
 
-  String _bookmark;
+  final ValueNotifier<String> _log = ValueNotifier<String>('');
+  Uint8List? _bookmark;
+
+  @override
+  void dispose() {
+    _log.dispose();
+    super.dispose();
+  }
+
+  void _addLog(String line) {
+    _log.value = '${_log.value}$line\n';
+  }
+
+  Future<void> _pickAndMint() async {
+    _addLog('Opening file picker…');
+    final XFile? picked = await openFile();
+    if (picked == null || picked.path.isEmpty) {
+      _addLog('No file selected.');
+      return;
+    }
+    _addLog('Selected: ${picked.path}');
+    // Mint while holding the panel grant, then persist the bytes.
+    final SecureBookmarkMint mint = await _secureBookmarks.mint(
+      File(picked.path),
+    );
+    setState(() {
+      _bookmark = mint.bookmark;
+    });
+    final String? volumeName = mint.volumeName;
+    if (volumeName != null) {
+      _addLog('Minted ${mint.bookmark.length} bytes (on $volumeName).');
+    } else {
+      _addLog('Minted ${mint.bookmark.length} bytes.');
+    }
+  }
+
+  Future<void> _resolve() async {
+    final Uint8List? bookmark = _bookmark;
+    if (bookmark == null) {
+      _addLog('Mint a bookmark first.');
+      return;
+    }
+    try {
+      final SecureBookmarkResolution resolution = await _secureBookmarks
+          .resolve(id: _resolveId, bookmarkBytes: bookmark);
+      // Resolve-and-rewrite: a renamed target reports stale=true, and only
+      // the rewritten bytes keep working, so persist them in place.
+      if (resolution.stale) {
+        setState(() {
+          _bookmark = resolution.refreshedBookmark;
+        });
+        _addLog('Stale bookmark, persisted refreshed bytes.');
+      }
+      final String onVolume =
+          resolution.volumeName != null ? ' (on ${resolution.volumeName})' : '';
+      _addLog(
+        'Resolved to ${resolution.path}$onVolume '
+        '[stale=${resolution.stale}, '
+        'startedAccess=${resolution.startedAccess}].',
+      );
+    } on UnresolvableBookmark catch (e) {
+      _addLog('Cannot resolve: $e');
+    }
+  }
+
+  Future<void> _release() async {
+    await _secureBookmarks.release(_resolveId);
+    _addLog('Released $_resolveId.');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,59 +117,40 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Row(
+            Wrap(
+              spacing: 8,
               children: <Widget>[
                 ElevatedButton(
-                  child: Text('Select File'),
-                  onPressed: () async {
-                    _logger.fine('showOpenPanel..');
-                    final result = await openFile();
-                    _logger.fine('got result: $result');
-                    if (result == null || result.path.isEmpty) {
-                      return;
-                    }
-                    setState(() {
-                      _file = result.path;
-                    });
-                    _logger.info('Selected file: $_file');
-                  },
+                  onPressed: _pickAndMint,
+                  child: const Text('Pick & Mint'),
                 ),
                 ElevatedButton(
-                  child: Text('Bookmark'),
-                  onPressed: () async {
-                    final bookmark =
-                        await _secureBookmarks.bookmark(File(_file));
-                    setState(() {
-                      _bookmark = bookmark;
-                    });
-                    _logger.info('Got bookmark: $bookmark');
-                  },
+                  onPressed: _resolve,
+                  child: const Text('Resolve'),
                 ),
                 ElevatedButton(
-                  child: Text('Resolve Bookmark'),
-                  onPressed: () async {
-                    final resolved =
-                        await _secureBookmarks.resolveBookmark(_bookmark);
-                    _logger.info('Resolved to $resolved');
-                  },
+                  onPressed: _release,
+                  child: const Text('Release'),
                 ),
               ],
             ),
             Expanded(
               child: Container(
-                color: Colors.white,
-                constraints: BoxConstraints.expand(),
+                constraints: const BoxConstraints.expand(),
+                margin: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Theme.of(context).dividerColor),
+                  borderRadius: BorderRadius.circular(8),
+                ),
                 child: SingleChildScrollView(
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    child: AnimatedBuilder(
-                      animation: logMessages.log,
-                      builder: (context, _) => Text(
-                        logMessages.log.toString(),
-                      ),
-                    ),
-                  ),
                   reverse: true,
+                  child: ValueListenableBuilder<String>(
+                    valueListenable: _log,
+                    builder: (BuildContext context, String log, _) {
+                      return Text(log);
+                    },
+                  ),
                 ),
               ),
             ),
@@ -145,56 +158,5 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
     );
-  }
-}
-
-class ShortFormatter extends LogRecordFormatter {
-  @override
-  StringBuffer formatToStringBuffer(LogRecord rec, StringBuffer sb) {
-    sb.write(
-        '${rec.time.hour}:${rec.time.minute}:${rec.time.second} ${rec.level.name} '
-        '${rec.message}');
-
-    if (rec.error != null) {
-      sb.write(rec.error);
-    }
-    // ignore: avoid_as
-    final stackTrace = rec.stackTrace ??
-        (rec.error is Error ? (rec.error as Error).stackTrace : null);
-    if (stackTrace != null) {
-      sb.write(stackTrace);
-    }
-    return sb;
-  }
-}
-
-class StringBufferWrapper with ChangeNotifier implements ValueNotifier<String> {
-  final StringBuffer _buffer = StringBuffer();
-
-  void writeln(String line) {
-    _buffer.writeln(line);
-    notifyListeners();
-  }
-
-  @override
-  String toString() => _buffer.toString();
-
-  @override
-  String get value => _buffer.toString();
-
-  @override
-  set value(String newValue) => _buffer
-    ..clear()
-    ..write(newValue);
-}
-
-class MemoryAppender extends BaseLogAppender {
-  MemoryAppender() : super(ShortFormatter());
-
-  final StringBufferWrapper log = StringBufferWrapper();
-
-  @override
-  void handle(LogRecord record) {
-    log.writeln(formatter.format(record));
   }
 }

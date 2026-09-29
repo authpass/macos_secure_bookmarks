@@ -1,23 +1,22 @@
 name: macos_secure_bookmarks_example
-description: An example project for flutter-desktop-embedding.
-
-version: 0.1.0
+description: Demonstrates how to use the macos_secure_bookmarks plugin.
+publish_to: 'none'
+version: 0.3.0
 
 environment:
-  sdk: '>=2.7.0 <3.0.0'
+  sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
   macos_secure_bookmarks:
     path: ../
-  file_selector: ^0.8.2
-  file_selector_macos: ^0.0.4
+  file_selector: ^1.1.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_lints: ^6.0.0
 
 flutter:
   uses-material-design: true
-
