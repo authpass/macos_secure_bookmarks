@@ -114,13 +114,20 @@ public class SecureBookmarksPlugin: NSObject, FlutterPlugin {
         options: [.withSecurityScope, .withoutUI, .withoutMounting],
         bookmarkDataIsStale: &isStale)
       guard url.isFileURL else {
-        result(FlutterError(code: "InvalidBookmark", message: "Bookmark is no file url. \(url)", details: nil))
+        // Resolved, but to something without a file path: report it through
+        // the same typed error as every other unresolvable cause.
+        unresolvable(
+          NSError(
+            domain: NSCocoaErrorDomain,
+            code: CocoaError.fileReadUnknown.rawValue,
+            userInfo: nil),
+          result: result)
         return
       }
       // Renaming the target yields stale=true; only the rewritten bytes keep
       // working, so the caller must persist them in place of the old bytes.
       var refreshedBookmark: Data?
-      if (isStale) {
+      if isStale {
         do {
           refreshedBookmark = try url.bookmarkData(
             options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil)
@@ -129,15 +136,11 @@ public class SecureBookmarksPlugin: NSObject, FlutterPlugin {
           return
         }
       }
-      // Balance a previous resolve under the same id before entering a new scope.
-      if let previous = scopedUrls[id] {
-        previous.stopAccessingSecurityScopedResource()
-      }
-      scopedUrls[id] = url
       // Measured: entering the scope reports true even for a URL inside the container.
       let startedAccess = url.startAccessingSecurityScopedResource()
-      // A deleted target still resolves to a URL, so confirm it is there.
-      // This is a bare stat, not a read: fast even for absent volumes.
+      // A deleted target still resolves to a URL, so confirm it stats
+      // reachable before replacing the previous scope. Detached volumes
+      // already failed at resolve, so this only sees present ones.
       do {
         guard try url.checkResourceIsReachable() else {
           throw NSError(
@@ -147,10 +150,15 @@ public class SecureBookmarksPlugin: NSObject, FlutterPlugin {
         }
       } catch {
         url.stopAccessingSecurityScopedResource()
-        scopedUrls.removeValue(forKey: id)
         unresolvable(error, result: result)
         return
       }
+      // Only now that the new scope is verified, balance a previous resolve
+      // under the same id: every failure above leaves the old scope intact.
+      if let previous = scopedUrls[id] {
+        previous.stopAccessingSecurityScopedResource()
+      }
+      scopedUrls[id] = url
       // Display data, never identity: best effort, never fails the resolve.
       let volumeName = try? url.resourceValues(forKeys: [.volumeNameKey]).volumeName
       var reply: [String: Any] = [
@@ -200,8 +208,8 @@ public class SecureBookmarksPlugin: NSObject, FlutterPlugin {
     }
   }
 
-  /// Detached volume, deleted target, and corrupt bytes all arrive here as one
-  /// typed error carrying the native domain and code.
+  /// Detached volume, deleted or non-file target, and corrupt bytes all arrive
+  /// here as one typed error carrying the native domain and code.
   private func unresolvable(_ error: Error, result: @escaping FlutterResult) {
     let nsError = error as NSError
     result(FlutterError(

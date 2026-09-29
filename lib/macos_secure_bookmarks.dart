@@ -52,7 +52,7 @@ sealed class SecureBookmarkFailure implements Exception {
   }
 }
 
-/// Detached volume, deleted target, or corrupt bytes.
+/// Detached volume, deleted or non-file target, or corrupt bytes.
 ///
 /// All unresolvable causes arrive as this one type; [domain] and [code] carry
 /// the native NSError domain and code for diagnosis.
@@ -76,7 +76,7 @@ final class UnresolvableBookmark extends SecureBookmarkFailure {
 }
 
 /// Create and resolve security aware bookmarks to access files
-/// in sandboxed MacOS apps.
+/// in sandboxed macOS apps.
 class SecureBookmarks {
   static const MethodChannel _channel = MethodChannel(
     'codeux.design/macos_secure_bookmarks',
@@ -169,9 +169,9 @@ class SecureBookmarks {
   /// Without the rewrite a renamed target stays stale forever.
   ///
   /// Throws [UnresolvableBookmark] for a detached volume, a deleted target,
-  /// or corrupt bytes. Reachability here means resolve-plus-a-real-read: the
-  /// sandbox answers existence checks positively without a grant, so a path
-  /// alone proves nothing until the file is actually opened.
+  /// or corrupt bytes. Resolve confirms the target stats reachable with the
+  /// scope held, but a path alone still proves nothing: attempt the actual
+  /// read and handle its failure.
   Future<SecureBookmarkResolution> resolve({
     required String id,
     required Uint8List bookmarkBytes,
@@ -185,13 +185,19 @@ class SecureBookmarks {
         // A broken native side must stay loud, never map onto "detached".
         throw StateError('Native resolve returned null for id "$id".');
       }
-      return (
+      final SecureBookmarkResolution resolution = (
         path: reply['path']! as String,
         stale: reply['stale']! as bool,
         startedAccess: reply['startedAccess']! as bool,
         refreshedBookmark: reply['refreshedBookmark'] as Uint8List?,
         volumeName: reply['volumeName'] as String?,
       );
+      if (resolution.stale != (resolution.refreshedBookmark != null)) {
+        throw StateError(
+          'Native resolve broke the stale/refresh invariant for id "$id".',
+        );
+      }
+      return resolution;
     } on PlatformException catch (e) {
       switch (e.code) {
         case 'Unresolvable':

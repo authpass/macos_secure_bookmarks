@@ -73,11 +73,13 @@ void main() {
         };
       });
 
-      await SecureBookmarks().resolve(id: 'doc', bookmarkBytes: bookmarkBytes);
+      final SecureBookmarkResolution resolution = await SecureBookmarks()
+          .resolve(id: 'doc', bookmarkBytes: bookmarkBytes);
 
       expect(seen!.method, 'resolve');
       expect(seen!.arguments['id'], 'doc');
       expect(seen!.arguments['bookmark'], bookmarkBytes);
+      expect(resolution.startedAccess, isFalse);
     });
 
     test('volume name passes through, including absent', () async {
@@ -199,9 +201,74 @@ void main() {
       );
     });
 
+    test('wrong-typed unresolvable details stay loud', () async {
+      mockReply((MethodCall call) async {
+        throw PlatformException(
+          code: 'Unresolvable',
+          details: <String, Object?>{
+            'domain': 'NSCocoaErrorDomain',
+            'code': '4',
+          },
+        );
+      });
+
+      await expectLater(
+        SecureBookmarks().resolve(id: 'doc', bookmarkBytes: bookmarkBytes),
+        throwsA(isA<StateError>()),
+      );
+    });
+
+    test('stale reply without refresh bytes stays loud', () async {
+      mockReply((MethodCall call) async {
+        return <String, Object?>{
+          'path': '/file.txt',
+          'stale': true,
+          'startedAccess': true,
+        };
+      });
+
+      await expectLater(
+        SecureBookmarks().resolve(id: 'doc', bookmarkBytes: bookmarkBytes),
+        throwsA(isA<StateError>()),
+      );
+    });
+
+    test('fresh reply with refresh bytes stays loud', () async {
+      mockReply((MethodCall call) async {
+        return <String, Object?>{
+          'path': '/file.txt',
+          'stale': false,
+          'startedAccess': true,
+          'refreshedBookmark': refreshedBytes,
+        };
+      });
+
+      await expectLater(
+        SecureBookmarks().resolve(id: 'doc', bookmarkBytes: bookmarkBytes),
+        throwsA(isA<StateError>()),
+      );
+    });
+
+    test('replies missing required keys stay loud', () async {
+      final List<Map<String, Object?>> replies = <Map<String, Object?>>[
+        <String, Object?>{'stale': false, 'startedAccess': true},
+        <String, Object?>{'path': '/file.txt', 'startedAccess': true},
+        <String, Object?>{'path': '/file.txt', 'stale': false},
+      ];
+      for (final Map<String, Object?> reply in replies) {
+        mockReply((MethodCall call) async {
+          return reply;
+        });
+        await expectLater(
+          SecureBookmarks().resolve(id: 'doc', bookmarkBytes: bookmarkBytes),
+          throwsA(isA<TypeError>()),
+        );
+      }
+    });
+
     test('unexpected native errors propagate unwrapped', () async {
       mockReply((MethodCall call) async {
-        throw PlatformException(code: 'InvalidBookmark');
+        throw PlatformException(code: 'TotallyBogus');
       });
 
       await expectLater(
@@ -250,6 +317,21 @@ void main() {
       expect(mint.volumeName, 'Red');
     });
 
+    test('absent volume name reads as null', () async {
+      mockReply((MethodCall call) async {
+        return <String, Object?>{
+          'bookmark': bookmarkBytes,
+        };
+      });
+
+      final SecureBookmarkMint mint = await SecureBookmarks().mint(
+        File('/file.txt'),
+      );
+
+      expect(mint.bookmark, bookmarkBytes);
+      expect(mint.volumeName, isNull);
+    });
+
     test('null native answer stays loud', () async {
       mockReply((MethodCall call) async {
         return null;
@@ -258,6 +340,17 @@ void main() {
       await expectLater(
         SecureBookmarks().mint(File('/file.txt')),
         throwsA(isA<StateError>()),
+      );
+    });
+
+    test('reply missing bookmark stays loud', () async {
+      mockReply((MethodCall call) async {
+        return <String, Object?>{'volumeName': 'Red'};
+      });
+
+      await expectLater(
+        SecureBookmarks().mint(File('/file.txt')),
+        throwsA(isA<TypeError>()),
       );
     });
   });
