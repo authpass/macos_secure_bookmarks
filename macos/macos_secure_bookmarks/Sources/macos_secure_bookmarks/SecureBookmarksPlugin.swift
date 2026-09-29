@@ -72,17 +72,23 @@ public class SecureBookmarksPlugin: NSObject, FlutterPlugin {
         result(FlutterError(code: "UnexpectedError", message: "Error while resolving bookmark \(error)", details: nil))
       }
     case "startAccessingSecurityScopedResource":
-      guard let file = args["file"] as? String,
-        let url = resolvedUrls[file] else {
-          result(FlutterError(code: "InvalidArguments", message: "expected file argument to be string.", details: nil))
-          return
+      guard let file = args["file"] as? String else {
+        result(FlutterError(code: "InvalidArguments", message: "expected file argument to be string.", details: nil))
+        return
+      }
+      guard let url = resolvedUrls[file] else {
+        result(FlutterError(code: "NoSuchBookmark", message: "No resolved bookmark for \(file). Call resolveBookmark first.", details: nil))
+        return
       }
       result(url.startAccessingSecurityScopedResource())
     case "stopAccessingSecurityScopedResource":
-      guard let file = args["file"] as? String,
-        let url = resolvedUrls[file] else {
-          result(FlutterError(code: "InvalidArguments", message: "expected file argument to be string.", details: nil))
-          return
+      guard let file = args["file"] as? String else {
+        result(FlutterError(code: "InvalidArguments", message: "expected file argument to be string.", details: nil))
+        return
+      }
+      guard let url = resolvedUrls[file] else {
+        result(FlutterError(code: "NoSuchBookmark", message: "No resolved bookmark for \(file). Call resolveBookmark first.", details: nil))
+        return
       }
       url.stopAccessingSecurityScopedResource()
       result(true)
