@@ -77,7 +77,6 @@ public class SecureBookmarksPlugin: NSObject, FlutterPlugin {
           result(FlutterError(code: "InvalidArguments", message: "expected file argument to be string.", details: nil))
           return
       }
-//      let url = URL(fileURLWithPath: file)
       result(url.startAccessingSecurityScopedResource())
     case "stopAccessingSecurityScopedResource":
       guard let file = args["file"] as? String,
@@ -85,7 +84,6 @@ public class SecureBookmarksPlugin: NSObject, FlutterPlugin {
           result(FlutterError(code: "InvalidArguments", message: "expected file argument to be string.", details: nil))
           return
       }
-//      let url = URL(fileURLWithPath: file)
       url.stopAccessingSecurityScopedResource()
       result(true)
     case "resolve":
